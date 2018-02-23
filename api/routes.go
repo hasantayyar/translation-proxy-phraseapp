@@ -41,12 +41,14 @@ func (l *locales) downloadLocale(c *gin.Context) {
 
 	var params downloadParams
 	if err := c.ShouldBindQuery(&params); err != nil {
+		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	locale, err := l.getLocale(projectID, localeID, &params)
 	if err != nil {
+		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
