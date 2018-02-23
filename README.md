@@ -13,6 +13,12 @@ The easiest way to run the translation-proxy is with Docker:
 
     docker run -i -t -p 8080:8080 -e PHRASEAPP_ACCESS_TOKEN=<access_token> thesoenke/translation-proxy
 
+Without Docker the translation-proxy needs first to be build with go:
+
+    go get
+    go build
+    ./translation-proxy
+
 ## Load testing
 1. `go get -u github.com/tsenart/vegeta`
 2. `cat vegeta/requests.txt | vegeta attack -rate=1000 -duration=30s | vegeta report`
