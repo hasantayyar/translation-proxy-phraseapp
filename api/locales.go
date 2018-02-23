@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 
@@ -24,6 +25,31 @@ type downloadParams struct {
 	KeepNotranslateTags        bool              `form:"keep_notranslate_tags,omitempty"`
 	SkipUnverifiedTranslations bool              `form:"skip_unverified_translations,omitempty"`
 	Tag                        string            `form:"tag,omitempty"`
+}
+
+func (l *locales) getLocaleList(projectID string) ([]byte, bool, error) {
+	localesData, err := l.Cache.Get(projectID)
+	if err != nil {
+		log.Printf("error: %s", err)
+	} else {
+		return localesData, true, nil
+	}
+
+	locales, err := l.Client.LocalesList(projectID, 0, 100)
+	if err != nil {
+		return nil, false, err
+	}
+
+	localesData, err = json.Marshal(locales)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if err := l.Cache.Set(projectID, localesData); err != nil {
+		log.Println(err)
+	}
+
+	return localesData, false, nil
 }
 
 func (l *locales) getLocale(projectID string, localeID string, params *downloadParams) ([]byte, bool, error) {
