@@ -5,15 +5,9 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/allegro/bigcache"
 	"github.com/mitchellh/hashstructure"
 	"github.com/phrase/phraseapp-go/phraseapp"
 )
-
-type locales struct {
-	Client *phraseapp.Client
-	Cache  *bigcache.BigCache
-}
 
 type downloadParams struct {
 	ConvertEmoji               bool              `form:"convert_emoji,omitempty"`
@@ -27,15 +21,15 @@ type downloadParams struct {
 	Tag                        string            `form:"tag,omitempty"`
 }
 
-func (l *locales) getLocaleList(projectID string) ([]byte, bool, error) {
-	localesData, err := l.Cache.Get(projectID)
+func (t *translationData) getLocaleList(projectID string) ([]byte, bool, error) {
+	localesData, err := t.Cache.Get(projectID)
 	if err != nil {
 		log.Printf("error: %s", err)
 	} else {
 		return localesData, true, nil
 	}
 
-	locales, err := l.Client.LocalesList(projectID, 0, 100)
+	locales, err := t.Client.LocalesList(projectID, 0, 100)
 	if err != nil {
 		return nil, false, err
 	}
@@ -45,17 +39,17 @@ func (l *locales) getLocaleList(projectID string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	if err := l.Cache.Set(projectID, localesData); err != nil {
+	if err := t.Cache.Set(projectID, localesData); err != nil {
 		log.Println(err)
 	}
 
 	return localesData, false, nil
 }
 
-func (l *locales) getLocale(projectID string, localeID string, params *downloadParams) ([]byte, bool, error) {
-	key, err := l.getCacheKey(localeID, params)
+func (t *translationData) getLocale(projectID string, localeID string, params *downloadParams) ([]byte, bool, error) {
+	key, err := t.getCacheKey(localeID, params)
 	if err == nil {
-		locale, err := l.Cache.Get(key)
+		locale, err := t.Cache.Get(key)
 		if err != nil {
 			log.Printf("error: %s", err)
 		} else {
@@ -73,29 +67,29 @@ func (l *locales) getLocale(projectID string, localeID string, params *downloadP
 		SkipUnverifiedTranslations: params.SkipUnverifiedTranslations,
 		Tag: &params.Tag,
 	}
-	locale, err := l.Client.LocaleDownload(projectID, localeID, localeParams)
+	locale, err := t.Client.LocaleDownload(projectID, localeID, localeParams)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if err := l.setLocale(localeID, locale, params); err != nil {
+	if err := t.setLocale(localeID, locale, params); err != nil {
 		log.Println(err)
 	}
 
 	return locale, false, nil
 }
 
-func (l *locales) setLocale(localeID string, locale []byte, params *downloadParams) error {
-	key, err := l.getCacheKey(localeID, params)
+func (t *translationData) setLocale(localeID string, locale []byte, params *downloadParams) error {
+	key, err := t.getCacheKey(localeID, params)
 	if err != nil {
 		return err
 	}
 
-	err = l.Cache.Set(key, locale)
+	err = t.Cache.Set(key, locale)
 	return err
 }
 
-func (l *locales) getCacheKey(localeID string, params *downloadParams) (string, error) {
+func (t *translationData) getCacheKey(localeID string, params interface{}) (string, error) {
 	hash, err := hashstructure.Hash(params, nil)
 	if err != nil {
 		log.Fatal(err)

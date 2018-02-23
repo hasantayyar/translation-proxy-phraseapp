@@ -10,6 +10,11 @@ import (
 	"github.com/phrase/phraseapp-go/phraseapp"
 )
 
+type translationData struct {
+	Client *phraseapp.Client
+	Cache  *bigcache.BigCache
+}
+
 // Run translation proxy API
 func Run(client *phraseapp.Client) {
 	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
@@ -17,7 +22,7 @@ func Run(client *phraseapp.Client) {
 		log.Fatal(err)
 	}
 
-	l := locales{
+	t := translationData{
 		Client: client,
 		Cache:  cache,
 	}
@@ -29,14 +34,15 @@ func Run(client *phraseapp.Client) {
 
 	api := router.Group("/api/v2")
 	{
-		api.GET("/projects/:project_id/locales/:id/download", l.downloadLocale)
-		api.GET("/projects/:project_id/locales", l.projectLocales)
+		api.GET("/projects/:project_id/locales/:id/download", t.downloadLocale)
+		api.GET("/projects/:project_id/locales", t.projectLocales)
+		api.GET("/projects/:project_id/translations", t.projectLocales)
 	}
 
 	router.Run(":8080")
 }
 
-func (l *locales) downloadLocale(c *gin.Context) {
+func (t *translationData) downloadLocale(c *gin.Context) {
 	projectID := c.Param("project_id")
 	localeID := c.Param("id")
 
@@ -47,7 +53,7 @@ func (l *locales) downloadLocale(c *gin.Context) {
 		return
 	}
 
-	locale, cached, err := l.getLocale(projectID, localeID, &params)
+	locale, cached, err := t.getLocale(projectID, localeID, &params)
 	if err != nil {
 		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -61,10 +67,10 @@ func (l *locales) downloadLocale(c *gin.Context) {
 	}
 }
 
-func (l *locales) projectLocales(c *gin.Context) {
+func (t *translationData) projectLocales(c *gin.Context) {
 	projectID := c.Param("project_id")
 
-	loacaleList, cached, err := l.getLocaleList(projectID)
+	localeList, cached, err := t.getLocaleList(projectID)
 	if err != nil {
 		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -72,8 +78,31 @@ func (l *locales) projectLocales(c *gin.Context) {
 	}
 
 	if cached {
-		c.String(http.StatusNotModified, string(loacaleList))
+		c.String(http.StatusNotModified, string(localeList))
 	} else {
-		c.String(http.StatusOK, string(loacaleList))
+		c.String(http.StatusOK, string(localeList))
+	}
+}
+
+func (t *translationData) listTranslations(c *gin.Context) {
+	projectID := c.Param("project_id")
+
+	var params translationsListParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		log.Printf("error: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	localeList, cached, err := t.getTranslations(projectID, &params)
+	if err != nil {
+		log.Printf("error: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if cached {
+		c.String(http.StatusNotModified, string(localeList))
+	} else {
+		c.String(http.StatusOK, string(localeList))
 	}
 }
