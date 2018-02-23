@@ -69,6 +69,7 @@ func (t *translationData) getLocale(projectID string, localeID string, params *d
 		SkipUnverifiedTranslations: params.SkipUnverifiedTranslations,
 		Tag: &params.Tag,
 	}
+
 	locale, err := t.Client.LocaleDownload(projectID, localeID, localeParams)
 	if err != nil {
 		return nil, false, err

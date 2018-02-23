@@ -17,7 +17,14 @@ type translationData struct {
 
 // Run translation proxy API
 func Run(client *phraseapp.Client) {
-	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
+	config := bigcache.Config{
+		Shards:             1024,
+		LifeWindow:         5 * time.Minute,
+		MaxEntriesInWindow: 1000 * 10 * 60,
+		Verbose:            true,
+		HardMaxCacheSize:   131072,
+	}
+	cache, err := bigcache.NewBigCache(config)
 	if err != nil {
 		log.Fatal(err)
 	}
