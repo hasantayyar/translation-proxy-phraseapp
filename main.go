@@ -22,5 +22,11 @@ func main() {
 		Credentials: credentials,
 	}
 
+	// check credentials
+	_, err := client.ProjectsList(0, 10)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	api.Run(&client)
 }
