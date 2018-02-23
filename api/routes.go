@@ -46,12 +46,16 @@ func (l *locales) downloadLocale(c *gin.Context) {
 		return
 	}
 
-	locale, err := l.getLocale(projectID, localeID, &params)
+	locale, cached, err := l.getLocale(projectID, localeID, &params)
 	if err != nil {
 		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.String(http.StatusOK, string(locale))
+	if cached {
+		c.String(http.StatusNotModified, string(locale))
+	} else {
+		c.String(http.StatusOK, string(locale))
+	}
 }

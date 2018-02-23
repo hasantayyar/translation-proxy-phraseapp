@@ -26,14 +26,14 @@ type downloadParams struct {
 	Tag                        string            `form:"tag,omitempty"`
 }
 
-func (l *locales) getLocale(projectID string, localeID string, params *downloadParams) ([]byte, error) {
+func (l *locales) getLocale(projectID string, localeID string, params *downloadParams) ([]byte, bool, error) {
 	key, err := l.getCacheKey(localeID, params)
 	if err == nil {
 		locale, err := l.Cache.Get(key)
 		if err != nil {
 			log.Printf("error: %s", err)
 		} else {
-			return locale, nil
+			return locale, true, nil
 		}
 	}
 
@@ -49,14 +49,14 @@ func (l *locales) getLocale(projectID string, localeID string, params *downloadP
 	}
 	locale, err := l.Client.LocaleDownload(projectID, localeID, localeParams)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if err := l.setLocale(localeID, locale, params); err != nil {
 		log.Println(err)
 	}
 
-	return locale, nil
+	return locale, false, nil
 }
 
 func (l *locales) setLocale(localeID string, locale []byte, params *downloadParams) error {
