@@ -36,7 +36,8 @@ func Run(client *phraseapp.Client) {
 	{
 		api.GET("/projects/:project_id/locales/:id/download", t.downloadLocale)
 		api.GET("/projects/:project_id/locales", t.projectLocales)
-		api.GET("/projects/:project_id/translations", t.projectLocales)
+		api.GET("/projects/:project_id/translations", t.listTranslations)
+		// api.GET("/projects/:project_id/locales/:locale_id/translations", t.listTranslationsByLocale) // TODO find a solution for routing conflict with downloadLocale
 	}
 
 	router.Run(":8080")
@@ -94,6 +95,30 @@ func (t *translationData) listTranslations(c *gin.Context) {
 		return
 	}
 	localeList, cached, err := t.getTranslations(projectID, &params)
+	if err != nil {
+		log.Printf("error: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if cached {
+		c.String(http.StatusNotModified, string(localeList))
+	} else {
+		c.String(http.StatusOK, string(localeList))
+	}
+}
+
+func (t *translationData) listTranslationsByLocale(c *gin.Context) {
+	projectID := c.Param("project_id")
+	localeID := c.Param("locale_id")
+
+	var params translationsListParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		log.Printf("error: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	localeList, cached, err := t.getTranslationsByLocale(projectID, localeID, &params)
 	if err != nil {
 		log.Printf("error: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

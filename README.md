@@ -1,4 +1,4 @@
-PhraseApp translation proxy to cache translations for unlimited API requests and very faster responses.
+PhraseApp translation proxy to cache translations for unlimited API requests and faster responses.
 
 ## Run
 1. `go get github.com/thesoenke/phrase-proxy`
@@ -18,6 +18,13 @@ Without Docker the translation-proxy needs first to be build with go:
     go get
     go build
     ./translation-proxy
+
+## Supported Endpoints
+The following endpoints are currently supported:
+- [List Locales](https://phraseapp.com/docs/api/v2/locales/#index) `GET /v2/projects/:project_id/locales`
+- [Download Locales](https://phraseapp.com/docs/api/v2/locales/#download) `GET /v2/projects/:project_id/locales/:id/download`
+- [List Translations](https://phraseapp.com/docs/api/v2/translations/#index) `GET /v2/projects/:project_id/translations
+`
 
 ## Load testing
 1. `go get -u github.com/tsenart/vegeta`

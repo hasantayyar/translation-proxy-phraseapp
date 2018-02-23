@@ -45,7 +45,49 @@ func (t *translationData) getTranslations(projectID string, params *translations
 	return translationMarshal, false, nil
 }
 
+func (t *translationData) getTranslationsByLocale(projectID string, localeID string, params *translationsListParams) ([]byte, bool, error) {
+	key, err := t.getCacheKey(projectID, params)
+	if err == nil {
+		locale, err := t.Cache.Get(key)
+		if err != nil {
+			log.Printf("error: %s", err)
+		} else {
+			return locale, true, nil
+		}
+	}
+
+	translations, err := t.Client.TranslationsList(projectID, 0, 1000, &phraseapp.TranslationsListParams{
+		Order: params.Order,
+		Q:     params.Q,
+		Sort:  params.Sort,
+	})
+	if err != nil {
+		return nil, false, err
+	}
+
+	translationMarshal, err := json.Marshal(translations)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if err := t.setTranslationsByLocale(projectID+localeID, translationMarshal, params); err != nil {
+		log.Println(err)
+	}
+
+	return translationMarshal, false, nil
+}
+
 func (t *translationData) setTranslations(projectID string, data []byte, params *translationsListParams) error {
+	key, err := t.getCacheKey(projectID, params)
+	if err != nil {
+		return err
+	}
+
+	err = t.Cache.Set(key, data)
+	return err
+}
+
+func (t *translationData) setTranslationsByLocale(projectID string, data []byte, params *translationsListParams) error {
 	key, err := t.getCacheKey(projectID, params)
 	if err != nil {
 		return err

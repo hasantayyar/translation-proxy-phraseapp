@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"strconv"
@@ -89,11 +91,16 @@ func (t *translationData) setLocale(localeID string, locale []byte, params *down
 	return err
 }
 
-func (t *translationData) getCacheKey(localeID string, params interface{}) (string, error) {
-	hash, err := hashstructure.Hash(params, nil)
+func (t *translationData) getCacheKey(data string, params interface{}) (string, error) {
+	hashParams, err := hashstructure.Hash(params, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "", err
 	}
 
-	return strconv.FormatUint(hash, 10), nil
+	key := []byte(data + strconv.FormatUint(hashParams, 10))
+	digest := md5.New()
+	digest.Write(key)
+	hash := digest.Sum(nil)
+	return hex.EncodeToString(hash), nil
 }
