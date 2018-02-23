@@ -39,36 +39,13 @@ func (l *locales) downloadLocale(c *gin.Context) {
 	projectID := c.Param("project_id")
 	localeID := c.Param("id")
 
-	type Params struct {
-		ConvertEmoji               bool              `form:"convert_emoji,omitempty"`
-		Encoding                   string            `form:"encoding,omitempty"`
-		FallbackLocaleID           string            `form:"fallback_locale_id,omitempty"`
-		FileFormat                 string            `form:"file_format" binding:"required"`
-		FormatOptions              map[string]string `form:"format_options,omitempty"`
-		IncludeEmptyTranslations   bool              `form:"include_empty_translations,omitempty"`
-		KeepNotranslateTags        bool              `form:"keep_notranslate_tags,omitempty"`
-		SkipUnverifiedTranslations bool              `form:"skip_unverified_translations,omitempty"`
-		Tag                        string            `form:"tag,omitempty"`
-	}
-
-	var params Params
+	var params downloadParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	localeParams := phraseapp.LocaleDownloadParams{
-		ConvertEmoji:               params.ConvertEmoji,
-		Encoding:                   &params.Encoding,
-		FallbackLocaleID:           &params.FallbackLocaleID,
-		FileFormat:                 &params.FileFormat,
-		IncludeEmptyTranslations:   params.IncludeEmptyTranslations,
-		KeepNotranslateTags:        params.KeepNotranslateTags,
-		SkipUnverifiedTranslations: params.SkipUnverifiedTranslations,
-		Tag: &params.Tag,
-	}
-
-	locale, err := l.getLocale(projectID, localeID, &localeParams)
+	locale, err := l.getLocale(projectID, localeID, &params)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
