@@ -3,11 +3,11 @@
 [PhraseApp](https://phraseapp.com) translation proxy to cache translations for unlimited API requests and faster responses.
 
 ## Run
-The easiest way to run the translation-proxy is with Docker:
+### Docker
 
-    docker run -i -t -p 8080:8080 -e PHRASEAPP_ACCESS_TOKEN=<access_token> thesoenke/translation-proxy
+    docker run -i -t -p 8080:8080 -e PHRASEAPP_ACCESS_TOKEN=<access_token> thesoenke/translation-proxy-phraseapp
 
-Without Docker the translation-proxy needs first to be built with go:
+### Build from source
 
     go get
     go build
@@ -20,6 +20,11 @@ The translation proxy replicates the API from PhraseApp of multiple GET endpoint
 - [Download Locales](https://phraseapp.com/docs/api/v2/locales/#download) `GET /v2/projects/:project_id/locales/:id/download`
 - [List Translations](https://phraseapp.com/docs/api/v2/translations/#index) `GET /v2/projects/:project_id/translations
 `
+
+### Webhooks
+By default the translations will be cached for 10 minutes. To immediately clear the cache and get the newest translations the translation proxy supports webhooks.
+
+The translation proxy will print the webhooks URL containing a secret on start: `/webhooks/:secret`. The secret will change after every restart. The webhooks URL then has to be added in the project on PhraseApp with events that should trigger a cache reset like: `translations:update`
 
 ## Load Test
 1. `go get -u github.com/tsenart/vegeta`

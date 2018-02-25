@@ -1,8 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/allegro/bigcache"
@@ -11,15 +14,16 @@ import (
 )
 
 type translationData struct {
-	Client *phraseapp.Client
-	Cache  *bigcache.BigCache
+	Client        *phraseapp.Client
+	Cache         *bigcache.BigCache
+	WebhookSecret int64
 }
 
 // Run translation proxy API
 func Run(client *phraseapp.Client) {
 	config := bigcache.Config{
 		Shards:             1024,
-		LifeWindow:         5 * time.Minute,
+		LifeWindow:         10 * time.Minute,
 		MaxEntriesInWindow: 1000 * 10 * 60,
 		Verbose:            true,
 		HardMaxCacheSize:   131072,
@@ -29,16 +33,21 @@ func Run(client *phraseapp.Client) {
 		log.Fatal(err)
 	}
 
+	secretID := rand.New(rand.NewSource(time.Now().UnixNano()))
 	t := translationData{
-		Client: client,
-		Cache:  cache,
+		Client:        client,
+		Cache:         cache,
+		WebhookSecret: secretID.Int63(),
 	}
+
+	fmt.Printf("Webhooks URL: /webhooks/%d\n", t.WebhookSecret)
 
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Translation Proxy is running")
 	})
 
+	router.POST("/webhooks/:secret_id", t.webhooks)
 	api := router.Group("/api/v2")
 	{
 		api.GET("/projects/:project_id/locales/:id/download", t.downloadLocale)
@@ -48,6 +57,20 @@ func Run(client *phraseapp.Client) {
 	}
 
 	router.Run(":8080")
+}
+
+func (t *translationData) webhooks(c *gin.Context) {
+	secret := c.Param("secret_id")
+	id, err := strconv.ParseInt(secret, 10, 64)
+	if err != nil {
+		log.Printf("error: invalid secret: '%s'", secret)
+	} else if id == t.WebhookSecret {
+		err = t.Cache.Reset()
+		if err != nil {
+			log.Printf("error: %s", err)
+		}
+	}
+	c.String(http.StatusOK, "")
 }
 
 func (t *translationData) downloadLocale(c *gin.Context) {
