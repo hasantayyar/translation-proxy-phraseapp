@@ -5,7 +5,8 @@
 ## Run
 ### Docker
 
-    docker run -i -t -p 8080:8080 -e PHRASEAPP_ACCESS_TOKEN=<access_token> thesoenke/translation-proxy-phraseapp
+    docker build -t translation-proxy-phraseapp .
+    docker run -it -p 8080:8080 -e PHRASEAPP_ACCESS_TOKEN=<access_token> translation-proxy-phraseapp
 
 ### Build from source
 
