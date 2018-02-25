@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/phrase/phraseapp-go/phraseapp"
-	"github.com/thesoenke/translation-proxy/api"
+	"github.com/thesoenke/translation-proxy-phraseapp/api"
 )
 
 func main() {
