@@ -54,6 +54,7 @@ func (t *translationData) downloadLocale(c *gin.Context) {
 	projectID := c.Param("project_id")
 	localeID := c.Param("id")
 
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	var params downloadParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		log.Printf("error: %s\n", err)
@@ -78,6 +79,7 @@ func (t *translationData) downloadLocale(c *gin.Context) {
 func (t *translationData) projectLocales(c *gin.Context) {
 	projectID := c.Param("project_id")
 
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	localeList, cached, err := t.getLocaleList(projectID)
 	if err != nil {
 		log.Printf("error: %s\n", err)
@@ -95,6 +97,7 @@ func (t *translationData) projectLocales(c *gin.Context) {
 func (t *translationData) listTranslations(c *gin.Context) {
 	projectID := c.Param("project_id")
 
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	var params translationsListParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		log.Printf("error: %s\n", err)
@@ -119,6 +122,7 @@ func (t *translationData) listTranslationsByLocale(c *gin.Context) {
 	projectID := c.Param("project_id")
 	localeID := c.Param("locale_id")
 
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	var params translationsListParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		log.Printf("error: %s\n", err)
