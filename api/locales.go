@@ -12,15 +12,19 @@ import (
 )
 
 type downloadParams struct {
-	ConvertEmoji               bool              `form:"convert_emoji,omitempty"`
+	ConvertEmoji               *bool              `form:"convert_emoji,omitempty"`
 	Encoding                   string            `form:"encoding,omitempty"`
 	FallbackLocaleID           string            `form:"fallback_locale_id,omitempty"`
 	FileFormat                 string            `form:"file_format" binding:"required"`
 	FormatOptions              map[string]string `form:"format_options,omitempty"`
-	IncludeEmptyTranslations   bool              `form:"include_empty_translations,omitempty"`
-	KeepNotranslateTags        bool              `form:"keep_notranslate_tags,omitempty"`
-	SkipUnverifiedTranslations bool              `form:"skip_unverified_translations,omitempty"`
+	IncludeEmptyTranslations   *bool              `form:"include_empty_translations,omitempty"`
+	KeepNotranslateTags        *bool              `form:"keep_notranslate_tags,omitempty"`
+	SkipUnverifiedTranslations *bool              `form:"skip_unverified_translations,omitempty"`
 	Tag                        string            `form:"tag,omitempty"`
+}
+
+type localesListParams struct {
+	Branch *string `json:"branch,omitempty"  cli:"opt --branch"`
 }
 
 func (t *translationData) getLocaleList(projectID string) ([]byte, bool, error) {
@@ -31,7 +35,9 @@ func (t *translationData) getLocaleList(projectID string) ([]byte, bool, error) 
 		return localesData, true, nil
 	}
 
-	locales, err := t.Client.LocalesList(projectID, 0, 100)
+	locales, err := t.Client.LocalesList(projectID, 0, 100, nil)
+	// the last param is localeListParam, holds the branch data
+
 	if err != nil {
 		return nil, false, err
 	}
